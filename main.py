@@ -14,6 +14,7 @@ creds = ServiceAccountCredentials.from_json_keyfile_name('resources/client_secre
 # Make sure you use the right name here.
 class Commands(commands.Cog):
     """Commands for Lookup of Anglish Words"""
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -25,6 +26,7 @@ class Commands(commands.Cog):
             - /m use -> brook
             - /m to use -> brook, benoot, upbrook, spurn
         Ideal for looking up Anglish words to English, or specific English words' translations
+        https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?usp=sharing
         """
         cells = await self.bot.sheet.findall(re.compile(rf"^({word})$", re.RegexFlag.IGNORECASE))
         reduced = {cell.row: cell for cell in cells if cell.row != 1}
@@ -46,6 +48,7 @@ class Commands(commands.Cog):
             - /f brook -> upbrook, abrook, brook
             - /f use -> outler, offcome
         Better if you aren't quite sure, but looking for more broad answers
+        https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?usp=sharing
         """
         rex = re.compile(rf"({word})", re.RegexFlag.IGNORECASE)
         cells = await self.bot.sheet.findall(rex)
@@ -63,12 +66,26 @@ class Commands(commands.Cog):
 
 
 class Bot(commands.Bot):
+    manager = None
+    client = None
+    workbook = None
+    sheet = None
     status_message = "/help for Anglish fun"
+    desc = \
+    """
+    A bot for looking up words in the Anglish wordbook, made by @Henry#8808 (122739797646245899)
+    Invite: https://discordapp.com/oauth2/authorize?client_id=671065305681887238&permissions=19520&scope=bot
+    Wordbook: https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit
+    Discord: https://discordapp.com/invite/StjsRtP
+    
+    If you appreciate what I do consider subscribing to my Patreon
+    https://www.patreon.com/henry232323
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args,
                          game=discord.Game(name=self.status_message),
-                         description="A bot for looking up words in the Anglish wordbook, made by @Henry#8808 (122739797646245899)",
+                         description=self.desc,
                          command_prefix="/",
                          **kwargs)
 

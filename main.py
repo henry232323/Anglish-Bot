@@ -1,7 +1,10 @@
+import asyncio
 import re
 
+import async_timeout
 import discord
 from discord.ext import commands
+import disputils
 import gspread_asyncio
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -18,6 +21,58 @@ class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    async def send_results(self, ctx, cells, word):
+        reduced = {cell.row: cell for cell in cells if cell.row != 1}
+        embeds = []
+        try:
+            async with ctx.typing():
+                async with async_timeout.timeout(300):
+                    for i, cell in enumerate(reduced.values()):
+                        # print(i, cell)
+                        embed = await self.bot.format_row(ctx, cell, word)
+                        embeds.append(embed)
+
+                        if i == (0 if len(reduced) == 1 else 1):
+                            paginator = disputils.BotEmbedPaginator(ctx, embeds)
+                            self.bot.loop.create_task(paginator.run())
+        except asyncio.TimeoutError:
+            pass
+
+        if not embeds:
+            await ctx.send("Query not found!")
+
+    @commands.command(aliases=["am"])
+    async def amatch(self, ctx, *, word):
+        """ See the match command, exact same syntax except it searches only the Anglish column """
+        rex = re.compile(rf"^({word})$", re.RegexFlag.IGNORECASE)
+        cells = await self.bot.sheet.findall(rex)
+        cells = (x for x in cells if x.col == 1)
+        await self.send_results(ctx, cells, word)
+
+    @commands.command(aliases=["a"])
+    async def anglish(self, ctx, *, word):
+        """ See the find command, exact same syntax except it searches only the Anglish column """
+        rex = re.compile(rf"({word})", re.RegexFlag.IGNORECASE)
+        cells = await self.bot.sheet.findall(rex)
+        cells = (x for x in cells if x.col == 1)
+        await self.send_results(ctx, cells, word)
+
+    @commands.command(aliases=["em"])
+    async def ematch(self, ctx, *, word):
+        """ See the match command, exact same syntax except it searches only the English meaning column """
+        rex = re.compile(rf"^({word})$", re.RegexFlag.IGNORECASE)
+        cells = await self.bot.sheet.findall(rex)
+        cells = (x for x in cells if x.col == 2)
+        await self.send_results(ctx, cells, word)
+
+    @commands.command(aliases=["e"])
+    async def english(self, ctx, *, word):
+        """ See the find command, exact same syntax except it searches only the English meaning column """
+        rex = re.compile(rf"({word})", re.RegexFlag.IGNORECASE)
+        cells = await self.bot.sheet.findall(rex)
+        cells = (x for x in cells if x.col == 2)
+        await self.send_results(ctx, cells, word)
+
     @commands.command(aliases=["m"])
     async def match(self, ctx, *, word):
         """Find entries in the Anglish Wordbook looking for exact matches. Search with Anglish, English, or Old English
@@ -29,17 +84,7 @@ class Commands(commands.Cog):
         https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?usp=sharing
         """
         cells = await self.bot.sheet.findall(re.compile(rf"^({word})$", re.RegexFlag.IGNORECASE))
-        reduced = {cell.row: cell for cell in cells if cell.row != 1}
-        embeds = []
-        for i, cell in enumerate(reduced.values()):
-            if i == 10:
-                break
-            embed = await self.bot.format_row(ctx, cell, word)
-            embeds.append(embed)
-            await ctx.send(embed=embed)
-
-        if not embeds:
-            await ctx.send("Query not found!")
+        await self.send_results(ctx, cells, word)
 
     @commands.command(aliases=["f"])
     async def find(self, ctx, *, word):
@@ -52,17 +97,7 @@ class Commands(commands.Cog):
         """
         rex = re.compile(rf"({word})", re.RegexFlag.IGNORECASE)
         cells = await self.bot.sheet.findall(rex)
-        reduced = {cell.row: cell for cell in cells if cell.row != 1}
-        embeds = []
-        for i, cell in enumerate(reduced.values()):
-            if i == 10:
-                break
-            embed = await self.bot.format_row(ctx, cell, word)
-            embeds.append(embed)
-            await ctx.send(embed=embed)
-
-        if not embeds:
-            await ctx.send("Query not found!")
+        await self.send_results(ctx, cells, word)
 
 
 class Bot(commands.Bot):
@@ -72,15 +107,26 @@ class Bot(commands.Bot):
     sheet = None
     status_message = "/help for Anglish fun"
     desc = \
-    """
-    A bot for looking up words in the Anglish wordbook, made by @Henry#8808 (122739797646245899)
-    Invite: https://discordapp.com/oauth2/authorize?client_id=671065305681887238&permissions=19520&scope=bot
-    Wordbook: https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit
-    Discord: https://discordapp.com/invite/StjsRtP
-    
-    If you appreciate what I do consider subscribing to my Patreon
-    https://www.patreon.com/henry232323
-    """
+        """
+        A bot for looking up words in the Anglish wordbook, made by @Henry#8808 (122739797646245899)
+        Invite: https://discordapp.com/oauth2/authorize?client_id=671065305681887238&permissions=19520&scope=bot
+        Wordbook: https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit
+        Discord: https://discordapp.com/invite/StjsRtP
+        
+        If you appreciate what I do consider subscribing to my Patreon
+        https://www.patreon.com/henry232323
+        
+        `/m <word>` (e.g. /m brook) to look up a word by exact match, this will search any word (Anglish, English, \
+        OE, anywhere in the document), but only exact matches. \
+        `/m brook` will likely only return the exact entry for brook. \
+        `/f <word>` is a little more broad, it will match anything containing the word, \
+        for example `/f brook` will give brook, upbrook, and others. \
+        You'll likely want to use this when you're looking for an Anglish word from English. \
+        `/m` is best for when you know the exact Anglish word you're wanting info on. \
+        If the bot is typing, that means it is still processing your query, so wait and more entries will load. \
+        See full descriptions with /help <command>. \
+        if you have any bugs to report or requests, mention me
+        """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args,
@@ -91,6 +137,17 @@ class Bot(commands.Bot):
 
         with open("resources/auth") as af:
             self._auth = af.read()
+
+        self.loop.create_task(self.workbook_refresh())
+
+    async def workbook_refresh(self):
+        while True:
+            self.manager = gspread_asyncio.AsyncioGspreadClientManager(lambda *args: creds)
+            self.client = await self.manager.authorize()
+            self.workbook = await self.client.open_by_url(
+                "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?usp=sharing")
+            self.sheet = await self.workbook.get_worksheet(0)
+            await asyncio.sleep(60 * 30)
 
     def run(self):
         super().run(self._auth)
@@ -113,11 +170,6 @@ class Bot(commands.Bot):
 
     async def on_ready(self):
         self.add_cog(Commands(self))
-        self.manager = gspread_asyncio.AsyncioGspreadClientManager(lambda *args: creds)
-        self.client = await self.manager.authorize()
-        self.workbook = await self.client.open_by_url(
-            "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?usp=sharing")
-        self.sheet = await self.workbook.get_worksheet(0)
 
 
 bot = Bot()

@@ -108,25 +108,28 @@ class Bot(commands.Bot):
     status_message = "/help for Anglish fun"
     desc = \
         """
-        A bot for looking up words in the Anglish wordbook, made by @Henry#8808 (122739797646245899)
-        Invite: https://discordapp.com/oauth2/authorize?client_id=671065305681887238&permissions=19520&scope=bot
-        Wordbook: https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit
-        Discord: https://discordapp.com/invite/StjsRtP
+A bot for looking up words in the Anglish wordbook, made by @Henry#8808 (122739797646245899)
+Invite: https://discordapp.com/oauth2/authorize?client_id=671065305681887238&permissions=19520&scope=bot
+Wordbook: https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit
+Discord: https://discordapp.com/invite/StjsRtP
+
+If you appreciate what I do consider subscribing to my Patreon
+https://www.patreon.com/henry232323
         
-        If you appreciate what I do consider subscribing to my Patreon
-        https://www.patreon.com/henry232323
-        
-        `/m <word>` (e.g. /m brook) to look up a word by exact match, this will search any word (Anglish, English, \
-        OE, anywhere in the document), but only exact matches. \
-        `/m brook` will likely only return the exact entry for brook. \
-        `/f <word>` is a little more broad, it will match anything containing the word, \
-        for example `/f brook` will give brook, upbrook, and others. \
-        You'll likely want to use this when you're looking for an Anglish word from English. \
-        `/m` is best for when you know the exact Anglish word you're wanting info on. \
-        If the bot is typing, that means it is still processing your query, so wait and more entries will load. \
-        See full descriptions with /help <command>. \
-        if you have any bugs to report or requests, mention me
-        """
+Bot is pretty easy y'all, use `/help` if you ever forget how to use the bot. \
+`/m <word>` (e.g. /m brook) to look up a word by exact match, this will search any word \
+(Anglish, English, OE, anywhere in the document), but only exact matches. \
+`/m <word>` will likely only return the exact entry for brook. \
+`/f <word>` is a little more broad, it will match anything containing the word, \
+for example `/f <word>` will give brook, upbrook, and others. \
+You'll likely want to use this when you're looking for an Anglish word from English. \
+`/m` is best for when you know the exact Anglish word you're wanting info on. \
+These commands include equivalents for if you want to search specific columns. \
+To search an existing Anglish term use `/a <word>` or `/am <word>` for `/m` functionality, \
+and equivalently for searching existing English words use `/e <word>` and `/em <word>`. \
+If the bot is typing, that means it is still processing your query, so wait and more entries will load. \
+See full descriptions with /help <command>. Good luck y'all, if you have any bugs to report or requests, mention me
+"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args,
@@ -159,12 +162,14 @@ class Bot(commands.Bot):
         embed = discord.Embed(color=0xDD0000, title=(await self.sheet.cell(cell.row, 1)).value,
                               url=furl.format(letters[cell.col], cell.row))
         embed.set_author(name=query, icon_url=message.author.avatar_url)
-        for col, h in enumerate(headers):
-            c = (await self.sheet.cell(cell.row, col + 1)).value
+        for h, c in zip(headers, await self.sheet.row_values(cell.row)):
             if h == "🔨":
                 c = str(bool(c))
             if c:
                 embed.add_field(name=h, value=c)
+
+        embed.add_field(name="Help",
+            value="Use /help for command usage. If the bot is typing it is still generating new results that the page number might not reflect")
 
         return embed
 

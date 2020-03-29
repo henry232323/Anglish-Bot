@@ -44,7 +44,7 @@ class Commands(commands.Cog):
     @commands.command(aliases=["am"])
     async def amatch(self, ctx, *, word):
         """ See the match command, exact same syntax except it searches only the Anglish column """
-        rex = re.compile(rf"^({word})$", re.RegexFlag.IGNORECASE)
+        rex = re.compile(rf"\b({word})\b", re.RegexFlag.IGNORECASE)
         cells = await self.bot.sheet.findall(rex)
         cells = (x for x in cells if x.col == 1)
         await self.send_results(ctx, cells, word)
@@ -60,7 +60,7 @@ class Commands(commands.Cog):
     @commands.command(aliases=["em"])
     async def ematch(self, ctx, *, word):
         """ See the match command, exact same syntax except it searches only the English meaning column """
-        rex = re.compile(rf"^({word})$", re.RegexFlag.IGNORECASE)
+        rex = re.compile(rf"\b({word})\b", re.RegexFlag.IGNORECASE)
         cells = await self.bot.sheet.findall(rex)
         cells = (x for x in cells if x.col == 2)
         await self.send_results(ctx, cells, word)
@@ -83,7 +83,7 @@ class Commands(commands.Cog):
         Ideal for looking up Anglish words to English, or specific English words' translations
         https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?usp=sharing
         """
-        cells = await self.bot.sheet.findall(re.compile(rf"^({word})$", re.RegexFlag.IGNORECASE))
+        cells = await self.bot.sheet.findall(re.compile(rf"\b({word})\b", re.RegexFlag.IGNORECASE))
         await self.send_results(ctx, cells, word)
 
     @commands.command(aliases=["f"])

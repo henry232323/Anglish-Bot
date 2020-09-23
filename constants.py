@@ -1,14 +1,18 @@
-scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-workbook_url = "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?usp=sharing"
-offerbook_url = "https://docs.google.com/spreadsheets/d/16f4aeFsNC4oHt3zt-XskiEzcQwU1u-rdh6P8rLCEDOM/edit?usp=sharing"
+""" Row formatting constants (Bot) """
 letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-headers = ["Word", "Meaning", "Kind", "Forebear", "Whence", "🔨", "Notes"]
+headers_base = ["Word", "Meaning", "Kind", "Forebear", "Whence", "🔨", "Notes"]
 furls = [
     "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?gid=0&range={}{}", 
     "https://docs.google.com/spreadsheets/d/16f4aeFsNC4oHt3zt-XskiEzcQwU1u-rdh6P8rLCEDOM/edit#gid=1186039826&range={}{}", 
     "https://docs.google.com/spreadsheets/d/16f4aeFsNC4oHt3zt-XskiEzcQwU1u-rdh6P8rLCEDOM/edit#gid=1193230534&range={}{}"]
 help_field = "Use /help for command usage. If the bot is typing it is still generating new results that the page number might not reflect"
 statuses = ["In Wordbook", "Offered", "Rejected"]
+
+
+""" General Bot constants """
+scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+workbook_url = "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?usp=sharing"
+offerbook_url = "https://docs.google.com/spreadsheets/d/16f4aeFsNC4oHt3zt-XskiEzcQwU1u-rdh6P8rLCEDOM/edit?usp=sharing"
 description = """
 A bot for looking up words in the Anglish wordbook, made by @Henry#8808 (122739797646245899)
 Invite: https://discordapp.com/oauth2/authorize?client_id=671065305681887238&permissions=19520&scope=bot

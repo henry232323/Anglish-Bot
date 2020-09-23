@@ -10,8 +10,8 @@ class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def send_results(self, ctx, cells, word, mixed=False):
-        reduced = [{cell.row: cell for cell in cells if cell.row != 1}]
+    async def _send_results(self, ctx, cells, word, mixed=False):
+        reduced = [{cell.row: cell for cell in cells[0] if cell.row != 1}]
         if mixed:
             reduced += [{cell.row: cell for cell in cells[1] if cell.row != 3}]
             reduced += [{cell.row: cell for cell in cells[2]}]
@@ -21,7 +21,8 @@ class Commands(commands.Cog):
                 async with async_timeout.timeout(300):
                     for chunk_idx, chunk in enumerate(reduced):
                         for i, cell in enumerate(chunk.values()):
-                            embeds.append(await self.bot.format_row(ctx, cell, word, chunk_idx, mixed))
+                            embeds.append(
+                                await self.bot.format_row(ctx, cell, word, chunk_idx, mixed))
                             if i == (0 if len(chunk) == 1 else 1):
                                 paginator = disputils.BotEmbedPaginator(ctx, embeds)
                                 self.bot.loop.create_task(paginator.run())
@@ -36,7 +37,7 @@ class Commands(commands.Cog):
         cells = map(async lambda sheet: await sheet.findall(rex), sheets)
         if col is not None:
             cells = map(lambda cell: filter(lambda x: x.col == col, cell), cells)
-        await self.send_results(ctx, list(cells), word)
+        await self._send_results(ctx, cells, word)
 
     @commands.command(aliases=["m"])
     async def match(self, ctx, *, word, hard=True, mixed=False, col=None):

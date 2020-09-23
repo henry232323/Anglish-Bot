@@ -1,0 +1,101 @@
+import re
+import asyncio
+import async_timeout
+from discord.ext import commands
+import disputils
+
+class Commands(commands.Cog):
+    """Commands for Lookup of Anglish Words"""
+
+    def __init__(self, bot):
+        self.bot = bot
+
+    async def send_results(self, ctx, cells, word, mixed=False):
+        reduced = [{cell.row: cell for cell in cells if cell.row != 1}]
+        if mixed:
+            reduced += [{cell.row: cell for cell in cells[1] if cell.row != 3}]
+            reduced += [{cell.row: cell for cell in cells[2]}]
+        embeds = []
+        try:
+            async with ctx.typing():
+                async with async_timeout.timeout(300):
+                    for chunk_idx, chunk in enumerate(reduced):
+                        for i, cell in enumerate(chunk.values()):
+                            embeds.append(await self.bot.format_row(ctx, cell, word, chunk_idx, mixed))
+                            if i == (0 if len(chunk) == 1 else 1):
+                                paginator = disputils.BotEmbedPaginator(ctx, embeds)
+                                self.bot.loop.create_task(paginator.run())
+        except asyncio.TimeoutError:
+            pass
+        if not embeds:
+            await ctx.send("Query not found!")
+
+    async def _findall_in_worksheets(self, ctx, regex, word, *, sheets=(self.bot.sheet,), col=None):
+        """ Private helper function containing sheet search logic """
+        rex = re.compile(regex, re.RegexFlag.IGNORECASE)
+        cells = map(async lambda sheet: await sheet.findall(rex), sheets)
+        if col is not None:
+            cells = map(lambda cell: filter(lambda x: x.col == col, cell), cells)
+        await self.send_results(ctx, list(cells), word)
+
+    @commands.command(aliases=["m"])
+    async def match(self, ctx, *, word, hard=True, mixed=False, col=None):
+        """ HARD match """
+        regex = rf"\b({word})\b" if hard else rf"({word})"
+        sheets = self.bot.sheets if mixed else self.bot.sheet
+        await self._findall_in_worksheets(ctx, regex, word, sheets=sheets, col=col)
+
+    @commands.command(aliases=["f"])
+    async def find(self, ctx, *, word, mixed=False, col=None):
+        """ SOFT match """
+        await self.match(ctx, word=word, hard=False, mixed=mixed, col=None)
+
+    @commands.command(aliases=["am"])
+    async def amatch(self, ctx, *, word):
+        """ Anglish-only HARD match """
+        await self.match(ctx, word=word, col=1)
+
+    @commands.command(aliases=["af", "a"])
+    async def anglish(self, ctx, *, word):
+        """ Anglish-only SOFT match """
+        await self.find(ctx, word=word, col=1)
+
+    @commands.command(aliases=["em"])
+    async def ematch(self, ctx, *, word):
+        """ English-only HARD match """
+        await self.match(ctx, word=word, col=2)
+
+    @commands.command(aliases=["ef", "e"])
+    async def english(self, ctx, *, word):
+        """ English-only SOFT match """
+        await self.find(ctx, word=word, col=2)
+
+    @commands.command()
+    async def amo(self, ctx, *, word):
+        """ Anglish-only HARD match + offerings page """
+        await self.match(ctx, word=word, mixed=True, col=1)
+
+    @commands.command(aliases=["afo"])
+    async def ao(self, ctx, *, word):
+        """ Anglish-only SOFT match + offerings page """
+        await self.find(ctx, word=word, mixed=True, col=1)
+
+    @commands.command()
+    async def emo(self, ctx, *, word):
+        """ English-only HARD match + offerings page """
+        await self.match(ctx, word=word, mixed=True, col=2)
+
+    @commands.command(aliases=["efo"])
+    async def eo(self, ctx, *, word):
+        """ English-only SOFT match + offerings page """
+        await self.find(ctx, word=word, mixed=True, col=2)
+
+    @commands.command()
+    async def mo(self, ctx, *, word):
+        """ HARD match + offerings page """
+        await self.match(ctx, word=word, mixed=True)
+
+    @commands.command()
+    async def fo(self, ctx, *, word):
+        """ SOFT match + offerings page """
+        await self.find(ctx, word=word, mixed=True)

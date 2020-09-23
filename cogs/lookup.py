@@ -1,14 +1,40 @@
 import re
 import asyncio
 import async_timeout
+import discord
 from discord.ext import commands
 import disputils
 
-class Commands(commands.Cog):
+""" Row formatting constants """
+letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+headers_base = ["Word", "Meaning", "Kind", "Forebear", "Whence", "🔨", "Notes"]
+furls = [
+    "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?gid=0&range={}{}", 
+    "https://docs.google.com/spreadsheets/d/16f4aeFsNC4oHt3zt-XskiEzcQwU1u-rdh6P8rLCEDOM/edit#gid=1186039826&range={}{}", 
+    "https://docs.google.com/spreadsheets/d/16f4aeFsNC4oHt3zt-XskiEzcQwU1u-rdh6P8rLCEDOM/edit#gid=1193230534&range={}{}"]
+help_field = "Use /help for command usage. If the bot is typing it is still generating new results that the page number might not reflect"
+statuses = ["In Wordbook", "Offered", "Rejected"]
+
+class Lookup(commands.Cog):
     """Commands for Lookup of Anglish Words"""
 
     def __init__(self, bot):
         self.bot = bot
+
+    async def _format_row(self, ctx, cell, word, chunk_idx=0, mixed=False):
+        headers = headers_base + ["Who?", "Source"] if mixed else headers_base
+        title = (await self.sheets[chunk_idx].cell(cell.row, 1)).value
+        url = furls[chunk_idx].format(letters[cell.col], cell.row)
+        author = {'name':word, 'icon_url':ctx.author.avatar_url}
+        fields = [
+            {'name':header, 'value':value} \
+            for header, val in zip(headers, await self.sheet.row_values(cell.row)) \
+            if (value := str(bool(val)) if header == "🔨" else val)]
+        fields += [{'name':"Status", 'value':statuses[chunk_idx]}] if mixed else fields
+        fields += [{'name':"Help", 'value':help_field}]
+
+        return discord.Embed.from_dict({
+            'color':0xDD0000, 'title':title, 'url':url, 'author':author, 'fields':fields})
 
     async def _send_results(self, ctx, cells, word, mixed=False):
         reduced = [{cell.row: cell for cell in cells[0] if cell.row != 1}]
@@ -22,7 +48,7 @@ class Commands(commands.Cog):
                     for chunk_idx, chunk in enumerate(reduced):
                         for i, cell in enumerate(chunk.values()):
                             embeds.append(
-                                await self.bot.format_row(ctx, cell, word, chunk_idx, mixed))
+                                await self._format_row(ctx, cell, word, chunk_idx, mixed))
                             if i == (0 if len(chunk) == 1 else 1):
                                 paginator = disputils.BotEmbedPaginator(ctx, embeds)
                                 self.bot.loop.create_task(paginator.run())

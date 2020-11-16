@@ -11,9 +11,11 @@ headers_base = ["Word", "Meaning", "Kind", "Forebear", "Whence", "🔨", "Notes"
 furls = [
     "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?gid=0&range={}{}", 
     "https://docs.google.com/spreadsheets/d/12mlPmNUD9KawCX1XHexIWK8YOL-UuCEwDV1vIhl-nc8/edit?copiedFromTrash#gid=1193230534&range={}{}", 
-    "https://docs.google.com/spreadsheets/d/16f4aeFsNC4oHt3zt-XskiEzcQwU1u-rdh6P8rLCEDOM/edit#gid=1193230534&range={}{}"]
+    "https://docs.google.com/spreadsheets/d/1PuDfTO1Fj6hv6vUKxe7yQaf8yiFxm1mmOE-1ZsmH_eo/edit#gid=2044515774&range={}{}",
+    "https://docs.google.com/spreadsheets/d/1PuDfTO1Fj6hv6vUKxe7yQaf8yiFxm1mmOE-1ZsmH_eo/edit#gid=648712924&range={}{}"
+]
 help_field = "Use /help for command usage. If the bot is typing it is still generating new results that the page number might not reflect"
-statuses = ["In Wordbook", "Offered", "Rejected"]
+statuses = ["In Wordbook", "Old Offerings", "Offerings", "Seen"]
 
 class Lookup(commands.Cog):
     """Commands for Lookup of Anglish Words"""

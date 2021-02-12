@@ -1,9 +1,10 @@
+import discord
 from discord.ext import commands
 import gspread_asyncio
 import asyncio
 from oauth2client.service_account import ServiceAccountCredentials
 
-from cogs import Lookup
+from cogs import Lookup, Etymology
 
 
 """ General Bot constants """
@@ -38,7 +39,10 @@ Append an -o to the command string!
 Ex: /emo <word> --> exact match in English in wordbook & offerings
     /afo <word> --> soft match in Anglish in wordbook & offerings
 
-
+/ety <word> --> etymology search of exact match in all resources
+Flags:
+    -soft                       --> specifies soft match
+    -r     wiki|etym|mec|bostol --> specifies resources to search as comma-separated list
 
 What is a "soft match"?
 Unlike a "hard match" (exact), a soft match (/f) will return all results that contain the query.
@@ -84,6 +88,7 @@ class Bot(commands.Bot):
             'resources/client_secret.json', scope)
         self.loop.create_task(self.workbook_refresh())
         self.add_cog(Lookup(self))
+        self.add_cog(Etymology(self))
 
     async def workbook_refresh(self):
         while True:

@@ -1,4 +1,9 @@
+aiohttp
 asyncio
 async_timeout
+bs4
 discord
 disputils
+ety
+gspread_asyncio
+oauth2client

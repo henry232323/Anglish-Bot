@@ -17,6 +17,7 @@ furls = [
 help_field = "Use /help for command usage. If the bot is typing it is still generating new results that the page number might not reflect"
 statuses = ["In Wordbook", "Old Offerings", "Offerings", "Seen"]
 
+
 class Lookup(commands.Cog):
     """Commands for Lookup of Anglish Words"""
 
@@ -64,7 +65,7 @@ class Lookup(commands.Cog):
         if sheets is None:
             sheets = (self.bot.sheet,)
         rex = re.compile(regex, re.RegexFlag.IGNORECASE)
-        cells = map(lambda sheet: await sheet.findall(rex), sheets)
+        cells = [await sheet.findall(rex) for sheet in sheets]
         if col is not None:
             cells = map(lambda cell: filter(lambda x: x.col == col, cell), cells)
         await self._send_results(ctx, cells, word)

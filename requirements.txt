@@ -1,4 +1,5 @@
 aiohttp
+aioify
 asyncio
 async_timeout
 bs4
@@ -7,3 +8,4 @@ disputils
 ety
 gspread_asyncio
 oauth2client
+wiktionaryparser

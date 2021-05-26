@@ -28,7 +28,7 @@ class Lookup(commands.Cog):
         headers = headers_base + ["Who?", "Source"] if mixed else headers_base
         title = (await ctx.bot.sheets[chunk_idx].cell(cell.row, 1)).value
         url = furls[chunk_idx].format(letters[cell.col], cell.row)
-        author = {'name': word, 'icon_url': ctx.author.avatar_url}
+        author = {'name': word, 'icon_url': str(ctx.author.avatar_url)}
         fields = [
             {'name': header, 'value': value}
             for header, val in zip(headers, await ctx.bot.sheet.row_values(cell.row))
@@ -37,7 +37,6 @@ class Lookup(commands.Cog):
         fields += [{'name': "Status", 'value': statuses[chunk_idx]}] if mixed else fields
         fields += [{'name': "Help", 'value': help_field}]
 
-        print({'color': 0xDD0000, 'title': title, 'url': url, 'author': author, 'fields': fields})
         return discord.Embed.from_dict(
             {'color': 0xDD0000, 'title': title, 'url': url, 'author': author, 'fields': fields}
         )
@@ -58,6 +57,7 @@ class Lookup(commands.Cog):
                             if i == (0 if len(chunk) == 1 else 1):
                                 paginator = disputils.BotEmbedPaginator(ctx, embeds)
                                 ctx.bot.loop.create_task(paginator.run())
+                    # print([embed.to_dict() for embed in embeds])
         except asyncio.TimeoutError:
             pass
         if not embeds:

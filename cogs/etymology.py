@@ -150,7 +150,7 @@ class Etymology(commands.Cog):
                 for fields in await self.scrape_fields(word, resource, is_soft):
                     embeds.append(format_embed(fields, resource))
 
-            from pprint import pprint
-            pprint([embed.to_dict() for embed in embeds])
+            # from pprint import pprint
+            # pprint([embed.to_dict() for embed in embeds])
             paginator = disputils.BotEmbedPaginator(ctx, embeds)
             ctx.bot.loop.create_task(paginator.run())

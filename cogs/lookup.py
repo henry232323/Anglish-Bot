@@ -9,8 +9,8 @@ import disputils
 letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 headers_base = ["Word", "Meaning", "Kind", "Forebear", "Whence", "🔨", "Notes"]
 furls = [
-    "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?gid=0&range={}{}", 
-    "https://docs.google.com/spreadsheets/d/12mlPmNUD9KawCX1XHexIWK8YOL-UuCEwDV1vIhl-nc8/edit?copiedFromTrash#gid=1193230534&range={}{}", 
+    "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?gid=0&range={}{}",
+    "https://docs.google.com/spreadsheets/d/12mlPmNUD9KawCX1XHexIWK8YOL-UuCEwDV1vIhl-nc8/edit?copiedFromTrash#gid=1193230534&range={}{}",
     "https://docs.google.com/spreadsheets/d/1PuDfTO1Fj6hv6vUKxe7yQaf8yiFxm1mmOE-1ZsmH_eo/edit#gid=2044515774&range={}{}",
     "https://docs.google.com/spreadsheets/d/1PuDfTO1Fj6hv6vUKxe7yQaf8yiFxm1mmOE-1ZsmH_eo/edit#gid=648712924&range={}{}"
 ]
@@ -28,16 +28,16 @@ class Lookup(commands.Cog):
         headers = headers_base + ["Who?", "Source"] if mixed else headers_base
         title = (await self.sheets[chunk_idx].cell(cell.row, 1)).value
         url = furls[chunk_idx].format(letters[cell.col], cell.row)
-        author = {'name':word, 'icon_url':ctx.author.avatar_url}
+        author = {'name': word, 'icon_url': ctx.author.avatar_url}
         fields = [
-            {'name':header, 'value':value} \
+            {'name': header, 'value': value} \
             for header, val in zip(headers, await self.sheet.row_values(cell.row)) \
             if (value := str(bool(val)) if header == "🔨" else val)]
-        fields += [{'name':"Status", 'value':statuses[chunk_idx]}] if mixed else fields
-        fields += [{'name':"Help", 'value':help_field}]
+        fields += [{'name': "Status", 'value': statuses[chunk_idx]}] if mixed else fields
+        fields += [{'name': "Help", 'value': help_field}]
 
         return discord.Embed.from_dict({
-            'color':0xDD0000, 'title':title, 'url':url, 'author':author, 'fields':fields})
+            'color': 0xDD0000, 'title': title, 'url': url, 'author': author, 'fields': fields})
 
     async def _send_results(self, ctx, cells, word, mixed=False):
         reduced = [{cell.row: cell for cell in cells[0] if cell.row != 1}]
@@ -95,12 +95,12 @@ class Lookup(commands.Cog):
     @commands.command(aliases=["em"])
     async def ematch(self, ctx, *, word):
         """ English-only HARD match """
-        await self.match(ctx, word=word, col=2)
+        await self.match(ctx, word=word, col=3)
 
     @commands.command(aliases=["ef", "e"])
     async def english(self, ctx, *, word):
         """ English-only SOFT match """
-        await self.find(ctx, word=word, col=2)
+        await self.find(ctx, word=word, col=3)
 
     @commands.command()
     async def amo(self, ctx, *, word):
@@ -115,12 +115,12 @@ class Lookup(commands.Cog):
     @commands.command()
     async def emo(self, ctx, *, word):
         """ English-only HARD match + offerings page """
-        await self.match(ctx, word=word, mixed=True, col=2)
+        await self.match(ctx, word=word, mixed=True, col=3)
 
     @commands.command(aliases=["efo"])
     async def eo(self, ctx, *, word):
         """ English-only SOFT match + offerings page """
-        await self.find(ctx, word=word, mixed=True, col=2)
+        await self.find(ctx, word=word, mixed=True, col=3)
 
     @commands.command()
     async def mo(self, ctx, *, word):

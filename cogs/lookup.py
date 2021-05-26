@@ -70,7 +70,7 @@ class Lookup(commands.Cog):
         rex = re.compile(regex, re.RegexFlag.IGNORECASE)
         cells = [await sheet.findall(rex) for sheet in sheets]
         if col is not None:
-            cells = map(lambda cell: filter(lambda x: x.col == col, cell), cells)
+            cells = list(map(lambda cell: filter(lambda x: x.col == col, cell), cells))
         await self._send_results(ctx, cells, word)
 
     @commands.command(aliases=["m"])

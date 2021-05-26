@@ -1,4 +1,5 @@
 import re
+
 import aiohttp
 import asyncio
 import async_timeout
@@ -47,40 +48,57 @@ props = {
 
 class Etymology(commands.Cog):
 
-    def __int__(self, bot=None):
-        ctx.bot = bot
+    def __init__(self, bot=None):
+        self.bot = bot
 
     @aioify
     def _wiktionaryparser(self, word):
         results = WiktionaryParser().fetch(word)
-        etyms = [etym['etymology'] for etym in results if 'etymology' in etym]
-        return [{'value': etym} for etym in etyms]
+        fieldsets = []
+
+        for etym in results:
+            if 'etymology' in etym:
+                parts = []
+                for defn in etym['definitions']:
+                    parts.append('**{pos}.**\n-{defs}'.format(pos=defn['partOfSpeech'], defs='\n-'.join(defn['text'])))
+                defns = "\n".join(parts)
+
+                fieldsets.append(
+                    [
+                        {'value': etym['etymology'], 'name': 'Etymology'},
+                        {'value': defns, 'name': 'Definitions'},
+                        {'value': '\n'.join(etym['pronunciations']), 'name': 'Pronunciations'},
+                    ]
+                )
+
+        return fieldsets
+
 
     @staticmethod
     def parse_entry(result, resource):
         if resource == 'etym':
-            word, class_ = result.div.find('a').text.split(' ')
+            word, class_ = result.div.find('a').text.split()
             return {'word': word, 'class_': class_, 'id': None}
         elif resource == 'mec':
             return {
                 'word': result.a.text.strip(),
-                'class_': f"({result.h3.find('span', class_='index-pos').text})",
-                'id': result.h3.find('a')['href'][1:]
+                'class_': f"({(result.h3 or result).find('span', class_='index-pos').text})",
+                'id': (result.h3 or result).find('a')['href'][1:]
             }
         elif resource == 'bostol':
             return {
-                'word': result.h3.find('a').text.strip(),
+                'word': (result.h3 or result).find('a').text.strip(),
                 'class_': result.find('div').text.strip(),
-                'id': result.h3.find('a')['href'][1:]
+                'id': (result.h3 or result).find('a')['href'][1:]
             }
         return {}
 
     async def scrape_fields(self, word, resource, is_soft=False):
         if resource == 'wiki':
-            return self._wiktionaryparser(word)
+            return await self._wiktionaryparser(word)
         tags = props[resource]
         url = tags['list']['url']
-        url_item = tags['item']['url']
+        url_item = tags.get('item', {}).get('url')
         async with aiohttp.ClientSession() as sess:
             async with sess.get(url.format(word)) as resp1:
                 soup1 = BeautifulSoup(await resp1.text())
@@ -105,27 +123,34 @@ class Etymology(commands.Cog):
                             print(error)
                             continue
                     fields.append({'name': f"{entry['word']} {entry['class_']}", 'value': value})
-        return fields
+                return [fields]
 
-    @commands.command()
+    @commands.command(aliases=["etymology"])
     async def ety(self, ctx, word, *flags):
+        """Look up the etymology of a word. Add -soft to the end to look up words that are parts of other words. -r does something too I don't remember though"""
         is_soft = '-soft' in flags
         resources_ = flags[flags.index('-r') + 1:] if '-r' in flags else RESOURCES
         resources = [res.replace(',', '').strip() for res in resources_]
 
-        def embed_paginate(fields, resource):
+        def format_embed(fields, resource):
             embed = discord.Embed.from_dict({
                 'color': 0xDD0000,
                 'title': word,
-                'author': {'name': props[resource]['name'], 'icon_url': ctx.author.avatar_url},
+                'author': {'name': props[resource]['name'], 'icon_url': str(ctx.author.avatar_url)},
                 'url': props[resource]['list']['url'].format(word),
                 'fields': fields
             })
-            paginator = disputils.BotEmbedPaginator(ctx, [embed])
-            ctx.bot.loop.create_task(paginator.run())
+
+            return embed
 
         async with ctx.typing():
-            embed_paginate([{'value': ety.tree(word).__str__()}], 'wiki')
+            embeds = [format_embed([{'value': ety.tree(word).__str__(), 'name': word}], 'wiki')]
+
             for resource in resources:
-                fields = await self.scrape_fields(word, resource, is_soft)
-                embed_paginate(fields, resource)
+                for fields in await self.scrape_fields(word, resource, is_soft):
+                    embeds.append(format_embed(fields, resource))
+
+            from pprint import pprint
+            pprint([embed.to_dict() for embed in embeds])
+            paginator = disputils.BotEmbedPaginator(ctx, embeds)
+            ctx.bot.loop.create_task(paginator.run())

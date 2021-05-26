@@ -83,7 +83,7 @@ class Lookup(commands.Cog):
     @commands.command(aliases=["f"])
     async def find(self, ctx, *, word, mixed=False, col=None):
         """ SOFT match """
-        await self.match(ctx, word=word, hard=False, mixed=mixed, col=None)
+        await self.match(ctx, word=word, hard=False, mixed=mixed, col=col)
 
     @commands.command(aliases=["am"])
     async def amatch(self, ctx, *, word):

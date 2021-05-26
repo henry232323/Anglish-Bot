@@ -7,7 +7,7 @@ import disputils
 
 """ Row formatting constants """
 letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-headers_base = ["Word", "Unswayed", "Meaning", "Kind", "Forebear", "Whence", "🔨", "Notes"]
+headers = ["Word", "Unswayed", "Meaning", "Kind", "Forebear", "Whence", "🔨", "Notes", "Who?", "Source"]
 furls = [
     "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?gid=0&range={}{}",
     "https://docs.google.com/spreadsheets/d/12mlPmNUD9KawCX1XHexIWK8YOL-UuCEwDV1vIhl-nc8/edit?copiedFromTrash#gid=1193230534&range={}{}",
@@ -25,7 +25,6 @@ class Lookup(commands.Cog):
         self.bot = bot
 
     async def _format_row(self, ctx, cell, word, chunk_idx=0, mixed=False):
-        headers = (headers_base + ["Who?", "Source"]) if mixed else headers_base
         title = (await ctx.bot.sheets[chunk_idx].cell(cell.row, 1)).value
         url = furls[chunk_idx].format(letters[cell.col], cell.row)
         author = {'name': word, 'icon_url': str(ctx.author.avatar_url)}
@@ -34,7 +33,7 @@ class Lookup(commands.Cog):
             for header, val in zip(headers, await ctx.bot.sheet.row_values(cell.row))
             if (value := str(bool(val)) if header == "🔨" else val)
         ]
-        fields += [{'name': "Status", 'value': statuses[chunk_idx]}] if mixed else fields
+        fields += [{'name': "Status", 'value': statuses[chunk_idx]}] if mixed else []
         fields += [{'name': "Help", 'value': help_field}]
 
         return discord.Embed.from_dict(

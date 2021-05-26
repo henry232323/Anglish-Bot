@@ -48,7 +48,7 @@ props = {
 class Etymology(commands.Cog):
 
     def __int__(self, bot=None):
-        self.bot = bot
+        ctx.bot = bot
 
     @aioify
     def _wiktionaryparser(self, word):
@@ -122,7 +122,7 @@ class Etymology(commands.Cog):
                 'fields': fields
             })
             paginator = disputils.BotEmbedPaginator(ctx, [embed])
-            self.bot.loop.create_task(paginator.run())
+            ctx.bot.loop.create_task(paginator.run())
 
         async with ctx.typing():
             embed_paginate([{'value': ety.tree(word).__str__()}], 'wiki')

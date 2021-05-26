@@ -26,12 +26,12 @@ class Lookup(commands.Cog):
 
     async def _format_row(self, ctx, cell, word, chunk_idx=0, mixed=False):
         headers = headers_base + ["Who?", "Source"] if mixed else headers_base
-        title = (await self.sheets[chunk_idx].cell(cell.row, 1)).value
+        title = (await ctx.bot.sheets[chunk_idx].cell(cell.row, 1)).value
         url = furls[chunk_idx].format(letters[cell.col], cell.row)
         author = {'name': word, 'icon_url': ctx.author.avatar_url}
         fields = [
             {'name': header, 'value': value} \
-            for header, val in zip(headers, await self.sheet.row_values(cell.row)) \
+            for header, val in zip(headers, await ctx.bot.sheet.row_values(cell.row)) \
             if (value := str(bool(val)) if header == "🔨" else val)]
         fields += [{'name': "Status", 'value': statuses[chunk_idx]}] if mixed else fields
         fields += [{'name': "Help", 'value': help_field}]
@@ -54,7 +54,7 @@ class Lookup(commands.Cog):
                                 await self._format_row(ctx, cell, word, chunk_idx, mixed))
                             if i == (0 if len(chunk) == 1 else 1):
                                 paginator = disputils.BotEmbedPaginator(ctx, embeds)
-                                self.bot.loop.create_task(paginator.run())
+                                ctx.bot.loop.create_task(paginator.run())
         except asyncio.TimeoutError:
             pass
         if not embeds:
@@ -74,7 +74,7 @@ class Lookup(commands.Cog):
     async def match(self, ctx, *, word, hard=True, mixed=False, col=None):
         """ HARD match """
         regex = rf"\b({word})\b" if hard else rf"({word})"
-        sheets = self.bot.sheets if mixed else self.bot.sheet
+        sheets = self.bot.sheets if mixed else [self.bot.sheet]
         await self._findall_in_worksheets(ctx, regex, word, sheets=sheets, col=col)
 
     @commands.command(aliases=["f"])

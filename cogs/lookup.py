@@ -7,7 +7,7 @@ import disputils
 
 """ Row formatting constants """
 letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-headers_base = ["Word", "Meaning", "Kind", "Forebear", "Whence", "🔨", "Notes"]
+headers_base = ["Word", "Unswayed", "Meaning", "Kind", "Forebear", "Whence", "🔨", "Notes"]
 furls = [
     "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?gid=0&range={}{}",
     "https://docs.google.com/spreadsheets/d/12mlPmNUD9KawCX1XHexIWK8YOL-UuCEwDV1vIhl-nc8/edit?copiedFromTrash#gid=1193230534&range={}{}",
@@ -25,7 +25,7 @@ class Lookup(commands.Cog):
         self.bot = bot
 
     async def _format_row(self, ctx, cell, word, chunk_idx=0, mixed=False):
-        headers = headers_base + ["Who?", "Source"] if mixed else headers_base
+        headers = (headers_base + ["Who?", "Source"]) if mixed else headers_base
         title = (await ctx.bot.sheets[chunk_idx].cell(cell.row, 1)).value
         url = furls[chunk_idx].format(letters[cell.col], cell.row)
         author = {'name': word, 'icon_url': str(ctx.author.avatar_url)}

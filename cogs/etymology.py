@@ -67,7 +67,7 @@ class Etymology(commands.Cog):
                     [
                         {'value': etym['etymology'], 'name': 'Etymology'},
                         {'value': defns, 'name': 'Definitions'},
-                        {'value': '\n'.join(etym['pronunciations']), 'name': 'Pronunciations'},
+                        {'value': '\n'.join(etym['pronunciations']['text']), 'name': 'Pronunciations'},
                     ]
                 )
 

@@ -121,7 +121,7 @@ class Etymology(commands.Cog):
                 'url': props[resource]['list']['url'].format(word),
                 'fields': fields
             })
-            paginator = disputils.BotEmbedPaginator(ctx, embed)
+            paginator = disputils.BotEmbedPaginator(ctx, [embed])
             self.bot.loop.create_task(paginator.run())
 
         async with ctx.typing():

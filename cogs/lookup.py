@@ -30,14 +30,17 @@ class Lookup(commands.Cog):
         url = furls[chunk_idx].format(letters[cell.col], cell.row)
         author = {'name': word, 'icon_url': ctx.author.avatar_url}
         fields = [
-            {'name': header, 'value': value} \
-            for header, val in zip(headers, await ctx.bot.sheet.row_values(cell.row)) \
-            if (value := str(bool(val)) if header == "🔨" else val)]
+            {'name': header, 'value': value}
+            for header, val in zip(headers, await ctx.bot.sheet.row_values(cell.row))
+            if (value := str(bool(val)) if header == "🔨" else val)
+        ]
         fields += [{'name': "Status", 'value': statuses[chunk_idx]}] if mixed else fields
         fields += [{'name': "Help", 'value': help_field}]
 
-        return discord.Embed.from_dict({
-            'color': 0xDD0000, 'title': title, 'url': url, 'author': author, 'fields': fields})
+        print({'color': 0xDD0000, 'title': title, 'url': url, 'author': author, 'fields': fields})
+        return discord.Embed.from_dict(
+            {'color': 0xDD0000, 'title': title, 'url': url, 'author': author, 'fields': fields}
+        )
 
     async def _send_results(self, ctx, cells, word, mixed=False):
         reduced = [{cell.row: cell for cell in cells[0] if cell.row != 1}]

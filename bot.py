@@ -5,7 +5,7 @@ import asyncio
 from oauth2client.service_account import ServiceAccountCredentials
 
 from cogs import Lookup, Etymology
-
+from cogs.admin import Admin
 
 """ General Bot constants """
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -89,6 +89,7 @@ class Bot(commands.Bot):
         self.loop.create_task(self.workbook_refresh())
         self.add_cog(Lookup(self))
         self.add_cog(Etymology(self))
+        self.add_cog(Admin())
 
     async def workbook_refresh(self):
         while True:

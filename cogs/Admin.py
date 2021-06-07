@@ -9,6 +9,5 @@ class Admin(commands.Cog):
     async def on_member_join(self, member: discord.Member):
         for name in self.name_blacklist:
             if name in member.name:
-                await member.ban()
+                await member.ban(reason="Name appears on new member name blacklist")
                 return
-   

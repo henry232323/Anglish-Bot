@@ -61,6 +61,8 @@ Bugs / Feedback / Requests?
 Mention me and I'll try to respond :) (@Henry#8808)
 """
 
+intents = discord.Intents.default()
+intents.members = True
 
 
 class Bot(commands.Bot):
@@ -107,9 +109,16 @@ class Bot(commands.Bot):
             self.sheets = (self.sheet, self.offersheet1, self.offersheet2)
             await asyncio.sleep(60 * 30)
 
+    async def on_member_join(self, member: discord.Member):
+        print(member)
+        for name in self.name_blacklist:
+            if name in member.name:
+                await member.ban(reason="Name appears on new member name blacklist")
+                return
+
     def run(self):
         super().run(self._auth)
 
 
-bot = Bot()
+bot = Bot(intents=intents)
 bot.run()

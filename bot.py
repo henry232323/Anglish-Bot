@@ -5,7 +5,7 @@ import asyncio
 from oauth2client.service_account import ServiceAccountCredentials
 
 from cogs import Lookup, Etymology
-from cogs.admin import Admin
+# from cogs.admin import Admin
 
 """ General Bot constants """
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -84,15 +84,19 @@ class Bot(commands.Bot):
         with open("resources/auth") as af:
             self._auth = af.read()
 
-        self.creds = ServiceAccountCredentials.from_json_keyfile_name(
-            'resources/client_secret.json', scope)
+        # self.creds = ServiceAccountCredentials.from_json_keyfile_name(
+        #     'resources/client_secret.json', scope
+        # )
         self.loop.create_task(self.workbook_refresh())
         self.add_cog(Lookup(self))
         self.add_cog(Etymology(self))
-        self.add_cog(Admin())
+        # self.add_cog(Admin())
 
     async def workbook_refresh(self):
         while True:
+            self.creds = ServiceAccountCredentials.from_json_keyfile_name(
+                'resources/client_secret.json', scope
+            )
             self.manager = gspread_asyncio.AsyncioGspreadClientManager(lambda *args: self.creds)
             self.client = await self.manager.authorize()
             self.workbook = await self.client.open_by_url(workbook_url)

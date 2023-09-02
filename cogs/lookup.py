@@ -27,7 +27,7 @@ class Lookup(commands.Cog):
     async def _format_row(self, ctx, cell, word, chunk_idx=0, mixed=False):
         title = (await ctx.bot.sheets[chunk_idx].cell(cell.row, 1)).value
         url = furls[chunk_idx].format(letters[cell.col], cell.row)
-        author = {'name': word, 'icon_url': str(ctx.author.avatar_url)}
+        author = {'name': word, 'icon_url': str(ctx.author.avatar.url)}
         fields = [
             {'name': header, 'value': value}
             for header, val in zip(headers, await ctx.bot.sheet.row_values(cell.row))

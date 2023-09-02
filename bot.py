@@ -66,6 +66,7 @@ Mention me and I'll try to respond :) (@Henry#8808)
 CLIENT_ID = 671065305681887238
 intents = discord.Intents.default()
 intents.members = True
+intents.message_content = True
 
 
 class Bot(commands.Bot):

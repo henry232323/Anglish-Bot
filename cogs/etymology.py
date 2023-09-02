@@ -136,7 +136,7 @@ class Etymology(commands.Cog):
             embed = discord.Embed.from_dict({
                 'color': 0xDD0000,
                 'title': word,
-                'author': {'name': props[resource]['name'], 'icon_url': str(ctx.author.avatar_url)},
+                'author': {'name': props[resource]['name'], 'icon_url': str(ctx.author.avatar.url)},
                 'url': props[resource]['list']['url'].format(word),
                 'fields': fields
             })

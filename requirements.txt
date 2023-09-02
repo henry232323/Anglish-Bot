@@ -3,7 +3,7 @@ aioify
 asyncio
 async_timeout
 bs4
-discord
+git+https://github.com/Rapptz/discord.py
 disputils
 ety
 gspread_asyncio

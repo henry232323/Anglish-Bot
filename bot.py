@@ -93,9 +93,11 @@ class Bot(commands.Bot):
         # self.creds = ServiceAccountCredentials.from_json_keyfile_name(
         #     'resources/client_secret.json', scope
         # )
+
+    async def setup_hook(self) -> None:
         asyncio.create_task(self.workbook_refresh())
-        self.add_cog(Lookup(self))
-        self.add_cog(Etymology(self))
+        await self.add_cog(Lookup(self))
+        await self.add_cog(Etymology(self))
         # self.add_cog(Admin())
 
     async def workbook_refresh(self):

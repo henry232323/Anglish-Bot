@@ -1,10 +1,12 @@
-import discord
-from discord.ext import commands
-import gspread_asyncio
 import asyncio
+
+import discord
+import gspread_asyncio
+from discord.ext import commands
 from oauth2client.service_account import ServiceAccountCredentials
 
 from cogs import Lookup, Etymology
+
 # from cogs.admin import Admin
 
 """ General Bot constants """
@@ -61,6 +63,7 @@ Bugs / Feedback / Requests?
 Mention me and I'll try to respond :) (@Henry#8808)
 """
 
+CLIENT_ID = 671065305681887238
 intents = discord.Intents.default()
 intents.members = True
 
@@ -81,6 +84,7 @@ class Bot(commands.Bot):
             game=discord.Game(name=self.status_message),
             description=self.desc,
             command_prefix="/",
+            application_id=CLIENT_ID,
             **kwargs)
 
         with open("resources/auth") as af:
@@ -89,7 +93,7 @@ class Bot(commands.Bot):
         # self.creds = ServiceAccountCredentials.from_json_keyfile_name(
         #     'resources/client_secret.json', scope
         # )
-        self.loop.create_task(self.workbook_refresh())
+        asyncio.create_task(self.workbook_refresh())
         self.add_cog(Lookup(self))
         self.add_cog(Etymology(self))
         # self.add_cog(Admin())
@@ -108,13 +112,6 @@ class Bot(commands.Bot):
             self.offersheet2 = await self.offerworkbook.get_worksheet(1)
             self.sheets = (self.sheet, self.offersheet1, self.offersheet2)
             await asyncio.sleep(60 * 30)
-
-    async def on_member_join(self, member: discord.Member):
-        print(member)
-        for name in self.name_blacklist:
-            if name in member.name:
-                await member.ban(reason="Name appears on new member name blacklist")
-                return
 
     def run(self):
         super().run(self._auth)

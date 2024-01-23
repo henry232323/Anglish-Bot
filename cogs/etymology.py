@@ -1,14 +1,9 @@
-import re
-
 import aiohttp
-import asyncio
-import async_timeout
 import discord
-from aioify import aioify
-from discord.ext import commands
 import disputils
 import ety
 from bs4 import BeautifulSoup
+from discord.ext import commands
 from wiktionaryparser import WiktionaryParser
 
 RESOURCES = ['wiki', 'etym', 'mec', 'bostol']
@@ -51,7 +46,6 @@ class Etymology(commands.Cog):
     def __init__(self, bot=None):
         self.bot = bot
 
-    @aioify
     def _wiktionaryparser(self, word):
         results = WiktionaryParser().fetch(word)
         fieldsets = []
@@ -73,7 +67,6 @@ class Etymology(commands.Cog):
 
         return fieldsets
 
-
     @staticmethod
     def parse_entry(result, resource):
         if resource == 'etym':
@@ -93,9 +86,15 @@ class Etymology(commands.Cog):
             }
         return {}
 
+    async def _parse_wiktionary(self, word):
+        return await self.bot.loop.run_in_executor(
+            None,
+            self._wiktionaryparser(word)
+        )
+
     async def scrape_fields(self, word, resource, is_soft=False):
         if resource == 'wiki':
-            return await self._wiktionaryparser(word)
+            return await self._parse_wiktionary(word)
         tags = props[resource]
         url = tags['list']['url']
         url_item = tags.get('item', {}).get('url')
@@ -125,9 +124,9 @@ class Etymology(commands.Cog):
                     fields.append({'name': f"{entry['word']} {entry['class_']}", 'value': value})
                 return [fields]
 
-    @commands.command(aliases=["etymology"])
-    async def ety(self, ctx, word, *flags):
-        """Look up the etymology of a word. Add -soft to the end to look up words that are parts of other words. -r does something too I don't remember though"""
+    @commands.hybrid_command(aliases=["etymology"])
+    async def ety(self, ctx, word, *, flags):
+        """Look up the etymology of a word. Add -soft for soft matches"""
         is_soft = '-soft' in flags
         resources_ = flags[flags.index('-r') + 1:] if '-r' in flags else RESOURCES
         resources = [res.replace(',', '').strip() for res in resources_]

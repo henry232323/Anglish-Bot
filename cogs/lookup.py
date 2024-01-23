@@ -72,64 +72,64 @@ class Lookup(commands.Cog):
             cells = list(map(lambda cell: filter(lambda x: x.col == col, cell), cells))
         await self._send_results(ctx, cells, word)
 
-    @commands.command(aliases=["m"])
+    @commands.hybrid_command(aliases=["m"])
     async def match(self, ctx, *, word, hard=True, mixed=False, col=None):
         """ HARD match """
         regex = rf"\b({word})\b" if hard else rf"({word})"
         sheets = self.bot.sheets if mixed else [self.bot.sheet]
         await self._findall_in_worksheets(ctx, regex, word, sheets=sheets, col=col)
 
-    @commands.command(aliases=["f"])
+    @commands.hybrid_command(aliases=["f"])
     async def find(self, ctx, *, word, mixed=False, col=None):
         """ SOFT match """
         await self.match(ctx, word=word, hard=False, mixed=mixed, col=col)
 
-    @commands.command(aliases=["am"])
+    @commands.hybrid_command(aliases=["am"])
     async def amatch(self, ctx, *, word):
         """ Anglish-only HARD match """
         await self.match(ctx, word=word, col=1)
 
-    @commands.command(aliases=["af", "a"])
+    @commands.hybrid_command(aliases=["af", "a"])
     async def anglish(self, ctx, *, word):
         """ Anglish-only SOFT match """
         await self.find(ctx, word=word, col=1)
 
-    @commands.command(aliases=["em"])
+    @commands.hybrid_command(aliases=["em"])
     async def ematch(self, ctx, *, word):
         """ English-only HARD match """
         await self.match(ctx, word=word, col=3)
 
-    @commands.command(aliases=["ef", "e"])
+    @commands.hybrid_command(aliases=["ef", "e"])
     async def english(self, ctx, *, word):
         """ English-only SOFT match """
         await self.find(ctx, word=word, col=3)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def amo(self, ctx, *, word):
         """ Anglish-only HARD match + offerings page """
         await self.match(ctx, word=word, mixed=True, col=1)
 
-    @commands.command(aliases=["afo"])
+    @commands.hybrid_command(aliases=["afo"])
     async def ao(self, ctx, *, word):
         """ Anglish-only SOFT match + offerings page """
         await self.find(ctx, word=word, mixed=True, col=1)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def emo(self, ctx, *, word):
         """ English-only HARD match + offerings page """
         await self.match(ctx, word=word, mixed=True, col=3)
 
-    @commands.command(aliases=["efo"])
+    @commands.hybrid_command(aliases=["efo"])
     async def eo(self, ctx, *, word):
         """ English-only SOFT match + offerings page """
         await self.find(ctx, word=word, mixed=True, col=3)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def mo(self, ctx, *, word):
         """ HARD match + offerings page """
         await self.match(ctx, word=word, mixed=True)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def fo(self, ctx, *, word):
         """ SOFT match + offerings page """
         await self.find(ctx, word=word, mixed=True)

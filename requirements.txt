@@ -3,8 +3,8 @@ aioify
 asyncio
 async_timeout
 bs4
-git+https://github.com/Rapptz/discord.py
-disputils
+discord.py
+git+https://github.com/STFCcommunity/disputils.git
 ety
 gspread_asyncio
 oauth2client

@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+aiohttp = "*"
+aioify = "*"
+asyncio = "*"
+async-timeout = "*"
+bs4 = "*"
+discord = "*"
+disputils = "*"
+ety = "*"
+gspread-asyncio = "*"
+oauth2client = "*"
+wiktionaryparser = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"

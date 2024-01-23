@@ -99,6 +99,7 @@ class Bot(commands.Bot):
         asyncio.create_task(self.workbook_refresh())
         await self.add_cog(Lookup(self))
         await self.add_cog(Etymology(self))
+        await bot.tree.sync()
         # self.add_cog(Admin())
 
     async def workbook_refresh(self):

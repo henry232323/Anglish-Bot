@@ -46,31 +46,32 @@ class Lookup(commands.Cog):
             reduced += [{cell.row: cell for cell in cells[1] if cell.row != 3}]
             reduced += [{cell.row: cell for cell in cells[2]}]
         embeds = []
-        try:
-            async with ctx.typing():
-                async with async_timeout.timeout(300):
-                    for chunk_idx, chunk in enumerate(reduced):
-                        for i, cell in enumerate(chunk.values()):
-                            embeds.append(
-                                await self._format_row(ctx, cell, word, chunk_idx, mixed))
-                            if i == (0 if len(chunk) == 1 else 1):
-                                paginator = disputils.BotEmbedPaginator(ctx, embeds)
-                                ctx.bot.loop.create_task(paginator.run())
-                    # print([embed.to_dict() for embed in embeds])
-        except asyncio.TimeoutError:
-            pass
+        for chunk_idx, chunk in enumerate(reduced):
+            for i, cell in enumerate(chunk.values()):
+                embeds.append(
+                    await self._format_row(ctx, cell, word, chunk_idx, mixed))
+                if i == (0 if len(chunk) == 1 else 1):
+                    paginator = disputils.BotEmbedPaginator(ctx, embeds)
+                    ctx.bot.loop.create_task(paginator.run())
+        # print([embed.to_dict() for embed in embeds])
+
         if not embeds:
             await ctx.send("Query not found!")
 
     async def _findall_in_worksheets(self, ctx, regex, word, *, sheets=None, col=None):
         """ Private helper function containing sheet search logic """
-        if sheets is None:
-            sheets = (self.bot.sheet,)
-        rex = re.compile(regex, re.RegexFlag.IGNORECASE)
-        cells = [await sheet.findall(rex) for sheet in sheets]
-        if col is not None:
-            cells = list(map(lambda cell: filter(lambda x: x.col == col, cell), cells))
-        await self._send_results(ctx, cells, word)
+        try:
+            async with ctx.typing():
+                async with async_timeout.timeout(300):
+                    if sheets is None:
+                        sheets = (self.bot.sheet,)
+                    rex = re.compile(regex, re.RegexFlag.IGNORECASE)
+                    cells = [await sheet.findall(rex) for sheet in sheets]
+                    if col is not None:
+                        cells = list(map(lambda cell: filter(lambda x: x.col == col, cell), cells))
+                    await self._send_results(ctx, cells, word)
+        except asyncio.TimeoutError:
+            pass
 
     @commands.hybrid_command(aliases=["m"])
     async def match(self, ctx, *, word, hard=True, mixed=False, col=None):

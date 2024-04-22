@@ -126,3 +126,4 @@ dmypy.json
 
 resources/
 .idea/
+.DS_Store

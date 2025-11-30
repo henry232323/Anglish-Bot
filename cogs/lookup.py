@@ -9,13 +9,10 @@ import disputils
 letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 headers = ["Word", "Unswayed", "Meaning", "Kind", "Forebear", "Whence", "🔨", "Notes", "Who?", "Source"]
 furls = [
-    "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?gid=0&range={}{}",
-    "https://docs.google.com/spreadsheets/d/12mlPmNUD9KawCX1XHexIWK8YOL-UuCEwDV1vIhl-nc8/edit?copiedFromTrash#gid=1193230534&range={}{}",
-    "https://docs.google.com/spreadsheets/d/1PuDfTO1Fj6hv6vUKxe7yQaf8yiFxm1mmOE-1ZsmH_eo/edit#gid=2044515774&range={}{}",
-    "https://docs.google.com/spreadsheets/d/1PuDfTO1Fj6hv6vUKxe7yQaf8yiFxm1mmOE-1ZsmH_eo/edit#gid=648712924&range={}{}"
+    "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?gid=0&range={}{}"
 ]
 help_field = "Use /help for command usage. If the bot is typing it is still generating new results that the page number might not reflect"
-statuses = ["In Wordbook", "Old Offerings", "Offerings", "Seen"]
+statuses = ["In Wordbook", "Seen"]
 
 
 class Lookup(commands.Cog):
@@ -24,32 +21,28 @@ class Lookup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def _format_row(self, ctx, cell, word, chunk_idx=0, mixed=False):
-        title = (await ctx.bot.sheets[chunk_idx].cell(cell.row, 1)).value
-        url = furls[chunk_idx].format(letters[cell.col], cell.row)
+    async def _format_row(self, ctx, cell, word):
+        title = (await ctx.bot.sheets[0].cell(cell.row, 1)).value
+        url = furls[0].format(letters[cell.col], cell.row)
         author = {'name': word, 'icon_url': str(ctx.author.avatar.url)}
         fields = [
             {'name': header, 'value': value}
             for header, val in zip(headers, await ctx.bot.sheet.row_values(cell.row))
             if (value := str(bool(val)) if header == "🔨" else val)
         ]
-        fields += [{'name': "Status", 'value': statuses[chunk_idx]}] if mixed else []
         fields += [{'name': "Help", 'value': help_field}]
 
         return discord.Embed.from_dict(
             {'color': 0xDD0000, 'title': title, 'url': url, 'author': author, 'fields': fields}
         )
 
-    async def _send_results(self, ctx, cells, word, mixed=False):
+    async def _send_results(self, ctx, cells, word):
         reduced = [{cell.row: cell for cell in cells[0] if cell.row != 1}]
-        if mixed:
-            reduced += [{cell.row: cell for cell in cells[1] if cell.row != 3}]
-            reduced += [{cell.row: cell for cell in cells[2]}]
         embeds = []
-        for chunk_idx, chunk in enumerate(reduced):
+        for chunk in reduced:
             for i, cell in enumerate(chunk.values()):
                 embeds.append(
-                    await self._format_row(ctx, cell, word, chunk_idx, mixed))
+                    await self._format_row(ctx, cell, word))
                 if i == (0 if len(chunk) == 1 else 1):
                     paginator = disputils.BotEmbedPaginator(ctx, embeds)
                     ctx.bot.loop.create_task(paginator.run())
@@ -74,16 +67,15 @@ class Lookup(commands.Cog):
             pass
 
     @commands.hybrid_command(aliases=["m"])
-    async def match(self, ctx, *, word, hard=True, mixed=False, col=None):
+    async def match(self, ctx, *, word, hard=True, col=None):
         """ HARD match """
         regex = rf"\b({word})\b" if hard else rf"({word})"
-        sheets = self.bot.sheets if mixed else [self.bot.sheet]
-        await self._findall_in_worksheets(ctx, regex, word, sheets=sheets, col=col)
+        await self._findall_in_worksheets(ctx, regex, word, col=col)
 
     @commands.hybrid_command(aliases=["f"])
-    async def find(self, ctx, *, word, mixed=False, col=None):
+    async def find(self, ctx, *, word, col=None):
         """ SOFT match """
-        await self.match(ctx, word=word, hard=False, mixed=mixed, col=col)
+        await self.match(ctx, word=word, hard=False, col=col)
 
     @commands.hybrid_command(aliases=["am"])
     async def amatch(self, ctx, *, word):
@@ -105,32 +97,3 @@ class Lookup(commands.Cog):
         """ English-only SOFT match """
         await self.find(ctx, word=word, col=3)
 
-    @commands.hybrid_command()
-    async def amo(self, ctx, *, word):
-        """ Anglish-only HARD match + offerings page """
-        await self.match(ctx, word=word, mixed=True, col=1)
-
-    @commands.hybrid_command(aliases=["afo"])
-    async def ao(self, ctx, *, word):
-        """ Anglish-only SOFT match + offerings page """
-        await self.find(ctx, word=word, mixed=True, col=1)
-
-    @commands.hybrid_command()
-    async def emo(self, ctx, *, word):
-        """ English-only HARD match + offerings page """
-        await self.match(ctx, word=word, mixed=True, col=3)
-
-    @commands.hybrid_command(aliases=["efo"])
-    async def eo(self, ctx, *, word):
-        """ English-only SOFT match + offerings page """
-        await self.find(ctx, word=word, mixed=True, col=3)
-
-    @commands.hybrid_command()
-    async def mo(self, ctx, *, word):
-        """ HARD match + offerings page """
-        await self.match(ctx, word=word, mixed=True)
-
-    @commands.hybrid_command()
-    async def fo(self, ctx, *, word):
-        """ SOFT match + offerings page """
-        await self.find(ctx, word=word, mixed=True)

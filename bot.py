@@ -2,6 +2,7 @@ import asyncio
 
 import discord
 import gspread_asyncio
+from discord import app_commands
 from discord.ext import commands
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -12,7 +13,6 @@ from cogs import Lookup, Etymology
 """ General Bot constants """
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 workbook_url = "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?usp=sharing"
-offerbook_url = "https://docs.google.com/spreadsheets/d/1PuDfTO1Fj6hv6vUKxe7yQaf8yiFxm1mmOE-1ZsmH_eo/edit?usp=sharing"
 description = """
 A bot for looking up words in the Anglish wordbook, made by @Henry#8808 (122739797646245899)
 Invite: https://discordapp.com/oauth2/authorize?client_id=671065305681887238&permissions=19520&scope=bot
@@ -36,10 +36,6 @@ COMMANDS:
 /af <word> --> soft match in Anglish
 /ef <word> --> soft match in English
 
-Want to search the offerings page too?
-Append an -o to the command string!
-Ex: /emo <word> --> exact match in English in wordbook & offerings
-    /afo <word> --> soft match in Anglish in wordbook & offerings
 
 /ety <word> --> etymology search of exact match in all resources
 Flags:
@@ -74,8 +70,6 @@ class Bot(commands.Bot):
     client = None
     workbook = None
     sheet = None
-    offersheet1 = None
-    offersheet2 = None
     status_message = "/help for Anglish fun"
     desc = description
 
@@ -84,7 +78,7 @@ class Bot(commands.Bot):
             *args,
             game=discord.Game(name=self.status_message),
             description=self.desc,
-            command_prefix="/",
+            command_prefix=["/", "!"],
             application_id=CLIENT_ID,
             **kwargs)
 
@@ -111,10 +105,7 @@ class Bot(commands.Bot):
             self.client = await self.manager.authorize()
             self.workbook = await self.client.open_by_url(workbook_url)
             self.sheet = await self.workbook.get_worksheet(0)
-            self.offerworkbook = await self.client.open_by_url(offerbook_url)
-            self.offersheet1 = await self.offerworkbook.get_worksheet(0)
-            self.offersheet2 = await self.offerworkbook.get_worksheet(1)
-            self.sheets = (self.sheet, self.offersheet1, self.offersheet2)
+            self.sheets = (self.sheet,)
             await asyncio.sleep(60 * 30)
 
     def run(self):

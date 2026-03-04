@@ -12,7 +12,8 @@ from typing import Any
 from discord_utils import pagination_buttons
 
 LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-HEADERS = ["Word", "Unswayed", "Meaning", "Kind", "Forebear", "Whence", "🔨", "Notes", "Who?", "Source"]
+# Spreadsheet columns A–H: WORD, SPELLING, DEFINITION, WORD CLASS, ETYMOLOGY, LANG ORIGIN, NOTES, TAGS
+HEADERS = ["Word", "Unswayed", "Meaning", "Kind", "Forebear", "Whence", "Notes", "Tags"]
 FURL = "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?gid=0&range={}{}"
 HELP_FIELD = "Use /help for command usage. If the bot is typing it is still generating new results."
 
@@ -25,10 +26,7 @@ def _format_row(sheet, cell, word: str, author_avatar: str) -> dict:
     row_vals = sheet.row_values(cell.row)
     fields = []
     for header, val in zip(HEADERS, row_vals):
-        if header == "🔨":
-            value = str(bool(val))
-        else:
-            value = val
+        value = val
         if value:
             fields.append({"name": header, "value": str(value)[:1024]})
     fields.append({"name": "Help", "value": HELP_FIELD})

@@ -13,13 +13,31 @@ from aws_cdk import aws_lambda
 from constructs import Construct
 
 
+REQUIRED_ENV = [
+    "DISCORD_PUBLIC_KEY",
+    "DISCORD_APPLICATION_ID",
+    "DISCORD_BOT_TOKEN",
+    "GOOGLE_CREDENTIALS_JSON",
+]
+
+
+def _validate_env() -> None:
+    missing = [k for k in REQUIRED_ENV if not (os.environ.get(k) or "").strip()]
+    if missing:
+        raise ValueError(
+            f"Missing required env var(s): {', '.join(missing)}. "
+            "Set them in .env (deploy.sh sources it) or export before deploy."
+        )
+
+
 class AnglishBotStack(cdk.Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
+        _validate_env()
         super().__init__(scope, id, **kwargs)
 
         repo_root = Path(__file__).resolve().parent.parent
         lambda_dir = repo_root / "interactions"
-        application_id = os.environ.get("DISCORD_APPLICATION_ID", "671065305681887238")
+        application_id = os.environ["DISCORD_APPLICATION_ID"].strip()
 
         # Optional: dependency layer (run build_layer.sh or pip install -r interactions/requirements.txt -t infrastructure/lambda_layer/python)
         layer_dir = repo_root / "infrastructure" / "lambda_layer"
@@ -42,8 +60,10 @@ class AnglishBotStack(cdk.Stack):
             memory_size=256,
             layers=[layer] if layer else [],
             environment={
-                "DISCORD_PUBLIC_KEY": os.environ.get("DISCORD_PUBLIC_KEY", ""),
+                "DISCORD_PUBLIC_KEY": os.environ["DISCORD_PUBLIC_KEY"].strip(),
                 "DISCORD_APPLICATION_ID": application_id,
+                "GOOGLE_CREDENTIALS_JSON": os.environ["GOOGLE_CREDENTIALS_JSON"].strip(),
+                "DISCORD_BOT_TOKEN": os.environ["DISCORD_BOT_TOKEN"].strip(),
             },
         )
         # Self-invoke for defer+follow-up: allow Lambda's role to invoke this function (resource-based, no role change)
@@ -54,12 +74,6 @@ class AnglishBotStack(cdk.Stack):
             function_name=discord_handler.function_name,
             principal=discord_handler.role.role_arn,
         )
-        google_creds = os.environ.get("GOOGLE_CREDENTIALS_JSON")
-        if google_creds:
-            discord_handler.add_environment("GOOGLE_CREDENTIALS_JSON", google_creds)
-        bot_token = os.environ.get("DISCORD_BOT_TOKEN", "").strip()
-        if bot_token:
-            discord_handler.add_environment("DISCORD_BOT_TOKEN", bot_token)
 
         # HTTP API (API Gateway v2) - single POST route for Discord
         api = apigwv2.HttpApi(

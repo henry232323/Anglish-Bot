@@ -127,3 +127,8 @@ dmypy.json
 resources/
 .idea/
 .DS_Store
+
+# CDK / Lambda layer build
+infrastructure/lambda_layer/
+infrastructure/cdk.out/
+infrastructure/*.egg-info/

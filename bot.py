@@ -1,10 +1,24 @@
 import asyncio
+import os
+import sys
+from pathlib import Path
+
+# Load .env from repo root (required for DISCORD_BOT_TOKEN and GOOGLE_CREDENTIALS_JSON)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent / ".env")
+except ImportError:
+    pass
 
 import discord
 import gspread_asyncio
 from discord import app_commands
 from discord.ext import commands
 from oauth2client.service_account import ServiceAccountCredentials
+
+# Reuse credential loading from interactions (env only)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from interactions.sheet_loader import _load_creds_dict
 
 from cogs import Lookup, Etymology
 
@@ -60,9 +74,7 @@ Mention me and I'll try to respond :) (@henry232323)
 """
 
 CLIENT_ID = 671065305681887238
-intents = discord.Intents.default()
-intents.members = True
-intents.message_content = True
+intents = discord.Intents.default()  # No privileged intents (members, message_content)
 
 
 class Bot(commands.Bot):
@@ -82,8 +94,10 @@ class Bot(commands.Bot):
             application_id=CLIENT_ID,
             **kwargs)
 
-        with open("resources/auth") as af:
-            self._auth = af.read()
+        # Token from env only (.env with DISCORD_BOT_TOKEN)
+        self._auth = os.environ.get("DISCORD_BOT_TOKEN", "").strip()
+        if not self._auth:
+            raise RuntimeError("Set DISCORD_BOT_TOKEN in .env (or export it)")
 
         # self.creds = ServiceAccountCredentials.from_json_keyfile_name(
         #     'resources/client_secret.json', scope
@@ -98,9 +112,14 @@ class Bot(commands.Bot):
 
     async def workbook_refresh(self):
         while True:
-            self.creds = ServiceAccountCredentials.from_json_keyfile_name(
-                'resources/client_secret.json', scope
-            )
+            creds_dict = _load_creds_dict()
+            if not creds_dict:
+                self.sheet = None
+                self.workbook = None
+                self.sheets = (None,)
+                await asyncio.sleep(60 * 30)
+                continue
+            self.creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
             self.manager = gspread_asyncio.AsyncioGspreadClientManager(lambda *args: self.creds)
             self.client = await self.manager.authorize()
             self.workbook = await self.client.open_by_url(workbook_url)

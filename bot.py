@@ -14,7 +14,7 @@ from cogs import Lookup, Etymology
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 workbook_url = "https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit?usp=sharing"
 description = """
-A bot for looking up words in the Anglish wordbook, made by @Henry#8808 (122739797646245899)
+A bot for looking up words in the Anglish wordbook, made by @henry232323 (122739797646245899)
 Invite: https://discordapp.com/oauth2/authorize?client_id=671065305681887238&permissions=19520&scope=bot
 Wordbook: https://docs.google.com/spreadsheets/d/1y8_11RDvuCRyUK_MXj5K7ZjccgCUDapsPDI5PjaEkMw/edit
 Discord: https://discordapp.com/invite/StjsRtP
@@ -56,7 +56,7 @@ Please wait and more entries will load.
 
 
 Bugs / Feedback / Requests?
-Mention me and I'll try to respond :) (@Henry#8808)
+Mention me and I'll try to respond :) (@henry232323)
 """
 
 CLIENT_ID = 671065305681887238

@@ -8,4 +8,5 @@ git+https://github.com/STFCcommunity/disputils.git
 ety
 gspread_asyncio
 oauth2client
+python-dotenv
 wiktionaryparser

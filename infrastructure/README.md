@@ -10,7 +10,7 @@ The workflow builds the Lambda layer (Linux-compatible, including PyNaCl) then d
 
 1. **Secrets** (Settings → Secrets and variables → Actions):  
    `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `DISCORD_PUBLIC_KEY`, `DISCORD_APPLICATION_ID`.  
-   Optional: `GOOGLE_CREDENTIALS_JSON` for wordbook/etymology.
+   Optional: `GOOGLE_CREDENTIALS_JSON` for wordbook/etymology; `DISCORD_BOT_TOKEN` so lookup/ety can respond within 3s (defer + follow-up).
 
 2. Push to `main`/`master` or run the **Build and Deploy** workflow manually. It runs `build_layer.sh` (Docker on the runner), then `cdk deploy`.
 
@@ -26,7 +26,7 @@ The workflow builds the Lambda layer (Linux-compatible, including PyNaCl) then d
    This populates `infrastructure/lambda_layer/python` with Linux-compatible packages (PyNaCl, gspread, etc.). The stack attaches it only if that directory exists.
 
 2. **Set env and deploy:**  
-   `export DISCORD_PUBLIC_KEY=...` (and optionally `DISCORD_APPLICATION_ID`, `GOOGLE_CREDENTIALS_JSON`)  
+   `export DISCORD_PUBLIC_KEY=...` (and optionally `DISCORD_APPLICATION_ID`, `GOOGLE_CREDENTIALS_JSON`, `DISCORD_BOT_TOKEN` for defer+follow-up)  
    From repo root: `./infrastructure/deploy.sh`  
    Or from `infrastructure/`: `pip install -r requirements.txt` then `npx aws-cdk deploy`.
 

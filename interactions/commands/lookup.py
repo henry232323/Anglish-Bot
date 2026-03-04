@@ -1,6 +1,10 @@
 """
 Lookup commands: match, find, amatch, anglish, ematch, english.
 Uses shared sheet instance; returns list of embed dicts for pagination.
+
+Pagination is stateless: each button encodes L:cmd:word:col:page in custom_id.
+Clicking a button sends a new interaction; we re-run lookup and return UPDATE_MESSAGE
+with that page. No server-side session.
 """
 import re
 from typing import Any
@@ -135,8 +139,8 @@ def handle_lookup_command(
     if total == 1:
         return response_message(embeds=[embeds[0]])
 
-    prefix = build_pagination_custom_id(cmd_name, word, col, 0)
-    components = pagination_buttons(prefix, 0, total)
+    base = build_pagination_custom_id(cmd_name, word, col, 0).rsplit(":", 1)[0]
+    components = pagination_buttons(base, 0, total)
     return response_message(embeds=[embeds[0]], components=components)
 
 
@@ -164,6 +168,6 @@ def handle_pagination_component(
     page = max(0, min(parsed["page"], total - 1))
     emb = embeds[page]
     emb.setdefault("footer", {})["text"] = f"({page + 1}/{total})"
-    prefix = build_pagination_custom_id(parsed["cmd"], parsed["word"], parsed["col"], page)
-    components = pagination_buttons(prefix, page, total)
+    base = build_pagination_custom_id(parsed["cmd"], parsed["word"], parsed["col"], page).rsplit(":", 1)[0]
+    components = pagination_buttons(base, page, total)
     return response_update_message(embeds=[emb], components=components)

@@ -46,10 +46,20 @@ class AnglishBotStack(cdk.Stack):
                 "DISCORD_APPLICATION_ID": application_id,
             },
         )
-
+        # Self-invoke for defer+follow-up: allow Lambda's role to invoke this function (resource-based, no role change)
+        aws_lambda.CfnPermission(
+            self,
+            "SelfInvokePermission",
+            action="lambda:InvokeFunction",
+            function_name=discord_handler.function_name,
+            principal=discord_handler.role.role_arn,
+        )
         google_creds = os.environ.get("GOOGLE_CREDENTIALS_JSON")
         if google_creds:
             discord_handler.add_environment("GOOGLE_CREDENTIALS_JSON", google_creds)
+        bot_token = os.environ.get("DISCORD_BOT_TOKEN", "").strip()
+        if bot_token:
+            discord_handler.add_environment("DISCORD_BOT_TOKEN", bot_token)
 
         # HTTP API (API Gateway v2) - single POST route for Discord
         api = apigwv2.HttpApi(

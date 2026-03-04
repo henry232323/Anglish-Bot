@@ -1,6 +1,10 @@
 """
 Lambda handler for Discord Interactions (slash commands + component buttons).
 Receives POST from API Gateway, verifies Discord signature, routes by type and command.
+
+Pagination is stateless: page index (and word, command, col) are encoded in button custom_id
+(e.g. L:m:word:col:page). Each button click is a new request; we re-run lookup and return
+UPDATE_MESSAGE with the chosen page. No server-side session required.
 """
 import json
 import os
@@ -8,8 +12,14 @@ import os
 from discord_utils import (
     verify_signature,
     response_pong,
+    response_deferred,
     get_user,
     avatar_url,
+    edit_followup,
+    INTERACTION_PING,
+    INTERACTION_APPLICATION_COMMAND,
+    INTERACTION_MESSAGE_COMPONENT,
+    CHANNEL_MESSAGE,
 )
 from sheet_loader import get_sheet
 from commands.lookup import (
@@ -53,7 +63,7 @@ def _route_app_command(interaction: dict) -> dict:
     if name in ("ety", "etymology"):
         return handle_ety_command(interaction, author_avatar)
 
-    return {"type": 4, "data": {"content": f"Unknown command: {name}", "allowed_mentions": {"parse": []}}}
+    return {"type": CHANNEL_MESSAGE, "data": {"content": f"Unknown command: {name}", "allowed_mentions": {"parse": []}}}
 
 
 def _route_message_component(interaction: dict) -> dict | None:
@@ -85,11 +95,45 @@ def _response(status: int, body: str, content_type: str = "application/json") ->
     return {"statusCode": status, "headers": {"Content-Type": content_type}, "body": body}
 
 
+def _handle_follow_up(interaction: dict) -> dict:
+    """Async path: do the work and PATCH the deferred message with the result."""
+    payload = _route_app_command(interaction)
+    if payload.get("type") == CHANNEL_MESSAGE and "data" in payload:
+        app_id = str(interaction.get("application_id", ""))
+        token = (interaction.get("token") or "").strip()
+        if app_id and token:
+            channel = interaction.get("channel") or {}
+            ch_type = channel.get("type")
+            thread_id = str(interaction["channel_id"]) if ch_type in (11, 12) else None
+            edit_followup(app_id, token, payload["data"], thread_id=thread_id)
+    return _response(200, "{}")
+
+
+def _invoke_follow_up(context: object, interaction: dict) -> None:
+    """Invoke this Lambda asynchronously to do the work and send follow-up (edit deferred message)."""
+    try:
+        import boto3
+        fn = getattr(context, "function_name", None) or os.environ.get("AWS_LAMBDA_FUNCTION_NAME", "")
+        if not fn:
+            return
+        boto3.client("lambda").invoke(
+            FunctionName=fn,
+            InvocationType="Event",
+            Payload=json.dumps({"follow_up": True, "interaction": interaction}),
+        )
+    except Exception as e:
+        print(f"[invoke_follow_up] {e}")
+
+
 def handler(event: dict, context: object) -> dict:
     """
     Lambda entrypoint. Expects API Gateway HTTP API (or REST) POST with Discord interaction body.
     Returns response for API Gateway (statusCode + body).
     """
+    # Async follow-up: we invoked ourselves after returning deferred; do the work and edit the message
+    if event.get("follow_up") and "interaction" in event:
+        return _handle_follow_up(event["interaction"])
+
     headers = _normalize_headers(event)
     sig = headers.get("x-signature-ed25519", "")
     ts = headers.get("x-signature-timestamp", "")
@@ -114,17 +158,23 @@ def handler(event: dict, context: object) -> dict:
 
     interaction_type = body.get("type")
 
-    if interaction_type == 1:
+    if interaction_type == INTERACTION_PING:
         return _response(200, json.dumps(response_pong()))
 
-    if interaction_type == 2:
+    if interaction_type == INTERACTION_APPLICATION_COMMAND:
+        data = body.get("data") or {}
+        name = (data.get("name") or "").strip().lower()
+        # Lookup and ety: defer (<3s) then async invoke does work and PATCH follow-up (needs DISCORD_BOT_TOKEN)
+        if (name in LOOKUP_NAMES or name in ("ety", "etymology")) and os.environ.get("DISCORD_BOT_TOKEN", "").strip():
+            _invoke_follow_up(context, body)
+            return _response(200, json.dumps(response_deferred()))
         payload = _route_app_command(body)
         return _response(200, json.dumps(payload))
 
-    if interaction_type == 3:
+    if interaction_type == INTERACTION_MESSAGE_COMPONENT:
         payload = _route_message_component(body)
         if payload is not None:
             return _response(200, json.dumps(payload))
-        return _response(200, json.dumps({"type": 4, "data": {"content": "Unknown component.", "allowed_mentions": {"parse": []}}}))
+        return _response(200, json.dumps({"type": CHANNEL_MESSAGE, "data": {"content": "Unknown component.", "allowed_mentions": {"parse": []}}}))
 
-    return _response(200, json.dumps({"type": 4, "data": {"content": "Unhandled interaction type.", "allowed_mentions": {"parse": []}}}))
+    return _response(200, json.dumps({"type": CHANNEL_MESSAGE, "data": {"content": "Unhandled interaction type.", "allowed_mentions": {"parse": []}}}))

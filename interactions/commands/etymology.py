@@ -230,8 +230,8 @@ def handle_ety_command(interaction: dict, author_avatar: str) -> dict:
     if total == 1:
         return response_message(embeds=[embeds[0]])
 
-    prefix = build_ety_custom_id(word, flags, 0)
-    components = pagination_buttons(prefix, 0, total)
+    base = build_ety_custom_id(word, flags, 0).rsplit(":", 1)[0]
+    components = pagination_buttons(base, 0, total)
     return response_message(embeds=[embeds[0]], components=components)
 
 
@@ -247,6 +247,6 @@ def handle_ety_pagination(custom_id: str, author_avatar: str) -> dict | None:
     page = max(0, min(parsed["page"], total - 1))
     emb = embeds[page]
     emb.setdefault("footer", {})["text"] = f"({page + 1}/{total})"
-    prefix = build_ety_custom_id(parsed["word"], parsed["flags"], page)
-    components = pagination_buttons(prefix, page, total)
+    base = build_ety_custom_id(parsed["word"], parsed["flags"], page).rsplit(":", 1)[0]
+    components = pagination_buttons(base, page, total)
     return response_update_message(embeds=[emb], components=components)

@@ -41,6 +41,6 @@ The workflow builds the Lambda layer (Linux-compatible, including PyNaCl) then d
 
 ## Stack contents
 
-- **Lambda**: Python 3.10, code from `../interactions`, optional dependency layer from `lambda_layer/` (build with `build_layer.sh`).
+- **Lambda**: Python 3.12, code from `../interactions`, optional dependency layer from `lambda_layer/` (build with `build_layer.sh`).
 - **API Gateway HTTP API**: Single `POST /` route → Lambda (payload format 2.0).
 - **Output**: `InteractionsEndpointUrl` – set this in the Discord app’s Interactions settings.

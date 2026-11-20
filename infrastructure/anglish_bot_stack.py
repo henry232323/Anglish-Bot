@@ -47,13 +47,13 @@ class AnglishBotStack(cdk.Stack):
                 self,
                 "DepsLayer",
                 code=aws_lambda.Code.from_asset(str(layer_dir)),
-                compatible_runtimes=[aws_lambda.Runtime.PYTHON_3_10],
+                compatible_runtimes=[aws_lambda.Runtime.PYTHON_3_12],
             )
 
         discord_handler = aws_lambda.Function(
             self,
             "DiscordHandler",
-            runtime=aws_lambda.Runtime.PYTHON_3_10,
+            runtime=aws_lambda.Runtime.PYTHON_3_12,
             handler="handler.handler",
             code=aws_lambda.Code.from_asset(str(lambda_dir)),
             timeout=cdk.Duration.seconds(30),
